@@ -10,6 +10,7 @@ using UnityEngine.UI;
 namespace wankkoree
 {
     [BepInPlugin("wankkoree.TheStanleyParableUltraDeluxe_Chinese", "TheStanleyParableUltraDeluxe_Chinese", "1.0")]
+    [BepInProcess("The Stanley Parable Ultra Deluxe.exe")]
     public class TheStanleyParableUltraDeluxe_Chinese : BaseUnityPlugin
     {
         public static TheStanleyParableUltraDeluxe_Chinese Inst;
