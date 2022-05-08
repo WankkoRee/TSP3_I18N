@@ -121,14 +121,16 @@ namespace TheStanleyParableUltraDeluxe_Chinese
                     originalFont.Add(key, __instance.font);
                 }
                 __instance.font = TranslateFont;
-            } else if (__instance.font == TranslateFont && I2.Loc.LocalizationManager.CurrentLanguage != newlanguageName.ToUpper())
+            }
+            else if (__instance.font == TranslateFont && I2.Loc.LocalizationManager.CurrentLanguage != newlanguageName.ToUpper())
             {
                 int key = __instance.GetHashCode();
                 if (originalFont.ContainsKey(key))
                 {
                     __instance.font = originalFont[key];
                     originalFont.Remove(key);
-                } else
+                }
+                else
                 {
                     Debug.LogError("一个 Text 对象可能被修改过字体，但原字体未被记录");
                 }
@@ -162,7 +164,8 @@ namespace TheStanleyParableUltraDeluxe_Chinese
                 {
                     Debug.LogError("一个 Text 对象可能被修改过字体，但原字体未被记录");
                 }
-            } else if (__instance.font == TMPTranslateFont)
+            }
+            else if (__instance.font == TMPTranslateFont)
             {
                 if (__instance.overflowMode != TextOverflowModes.Overflow)
                 {
@@ -174,25 +177,78 @@ namespace TheStanleyParableUltraDeluxe_Chinese
             }
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(I2.Loc.LocalizationManager), nameof(I2.Loc.LocalizationManager.GetTranslation))]
-        static bool GetTermTranslationPatch(string Term, ref string __result)
+        /// <summary>
+        ///  当使用目标语言时，对资源对象进行翻译，逻辑摘录自官方的 LanguageSourceData.TryGetFallbackTranslation
+        /// </summary>
+        /// <param name="term"></param>
+        /// <param name="Translation"></param>
+        /// <param name="overrideLanguage"></param>
+        /// <param name="overrideSpecialization"></param>
+        /// <param name="skipDisabled"></param>
+        /// <param name="allowCategoryMistmatch"></param>
+        /// <param name="__instance"></param>
+        /// <param name="__result"></param>
+        /// <returns></returns>
+        [HarmonyPrefix, HarmonyPatch(typeof(I2.Loc.LanguageSourceData), nameof(I2.Loc.LanguageSourceData.TryGetTranslation))]
+        static bool TryGetTranslationPatch(
+            string term, ref string Translation, string overrideLanguage, string overrideSpecialization, bool skipDisabled, bool allowCategoryMistmatch,
+            I2.Loc.LanguageSourceData __instance, ref bool __result
+            )
         {
-            if (I2.Loc.LocalizationManager.CurrentLanguage != newlanguageName.ToUpper()) return true;
-            if (dicts.ContainsKey(Term))
+            if (I2.Loc.LocalizationManager.CurrentLanguage != newlanguageName.ToUpper())
             {
-                __result = dicts[Term].Chinese;
+                return true;
+            }
+            if (dicts.ContainsKey(term))
+            {
+                Translation = dicts[term].Chinese;
+                __result = true;
+                return false;
             }
             else
             {
-                I2.Loc.TermData termData = I2.Loc.LocalizationManager.Sources[0].GetTermData(Term);
+                I2.Loc.TermData termData = __instance.GetTermData(term);
                 if (termData != null)
-                    __result = termData.GetTranslation(0);
-                else
                 {
-                    Debug.LogError($"翻译对象: {Term} 找不到翻译和原文");
-                    __result = "找不到翻译和原文";
+                    Translation = termData.GetTranslation(0);
+                    if (Translation == "---")
+                    {
+                        Translation = string.Empty;
+                        __result = true;
+                        return false;
+                    }
+                    if (!string.IsNullOrEmpty(Translation))
+                    {
+                        __result = true;
+                        return false;
+                    }
+                    Translation = null;
+                }
+                if (__instance.OnMissingTranslation == I2.Loc.LanguageSourceData.MissingTranslationAction.ShowWarning)
+                {
+                    Translation = string.Format("<!-Missing Translation [{0}]-!>", term);
+                    __result = true;
+                    return false;
+                }
+                if (__instance.OnMissingTranslation == I2.Loc.LanguageSourceData.MissingTranslationAction.Fallback && termData != null)
+                {
+                    //return __instance.TryGetFallbackTranslation(termData, out Translation, 0, overrideSpecialization, skipDisabled);
+                }
+                if (__instance.OnMissingTranslation == I2.Loc.LanguageSourceData.MissingTranslationAction.Empty)
+                {
+                    Translation = string.Empty;
+                    __result = true;
+                    return false;
+                }
+                if (__instance.OnMissingTranslation == I2.Loc.LanguageSourceData.MissingTranslationAction.ShowTerm)
+                {
+                    Translation = term;
+                    __result = true;
+                    return false;
                 }
             }
+            Translation = null;
+            __result = false;
             return false;
         }
 
@@ -211,7 +267,7 @@ namespace TheStanleyParableUltraDeluxe_Chinese
         static void SubtitleProfilePatch(GameMaster __instance)
         {
             bool needAdd = true;
-            foreach(SubtitleProfile language in __instance.languageProfileData.profiles)
+            foreach (SubtitleProfile language in __instance.languageProfileData.profiles)
             {
                 if (language.name == $"LangaugeProfile_{newlanguageName}")
                     needAdd = false;
