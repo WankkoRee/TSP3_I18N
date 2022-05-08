@@ -74,18 +74,6 @@ namespace wankkoree
         }
 
         /// <summary>
-        /// 修改TMP字体
-        /// </summary>
-        [HarmonyPostfix, HarmonyPatch(typeof(TextMeshProUGUI), "OnEnable")]
-        public static void TMPFontPatch(TextMeshProUGUI __instance)
-        {
-            if (__instance.font.name != TMPTranslateFont.name)
-            {
-                __instance.font = TMPTranslateFont;
-            }
-        }
-
-        /// <summary>
         /// 如果有不显示的文本，则设置显示方式为溢出
         /// </summary>
         [HarmonyPostfix, HarmonyPatch(typeof(TextMeshProUGUI), "InternalUpdate")]
@@ -100,6 +88,9 @@ namespace wankkoree
                         __instance.overflowMode = TextOverflowModes.Overflow;
                     }
                 }
+            } else
+            {
+                __instance.font = TMPTranslateFont;
             }
         }
     }
