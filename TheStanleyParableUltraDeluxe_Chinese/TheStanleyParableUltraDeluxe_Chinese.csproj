@@ -35,12 +35,16 @@
       <HintPath>C:\Users\wkr\Desktop\The.Stanley.Parable.Ultra.Deluxe\BepInEx\core\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>C:\Users\wkr\Desktop\The.Stanley.Parable.Ultra.Deluxe\The Stanley Parable Ultra Deluxe_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>C:\Users\wkr\Desktop\The.Stanley.Parable.Ultra.Deluxe\BepInEx\core\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -77,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dict.cs" />
     <Compile Include="TheStanleyParableUltraDeluxe_Chinese.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
