@@ -81,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReverseText.cs" />
     <Compile Include="Dict.cs" />
     <Compile Include="TheStanleyParableUltraDeluxe_Chinese.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

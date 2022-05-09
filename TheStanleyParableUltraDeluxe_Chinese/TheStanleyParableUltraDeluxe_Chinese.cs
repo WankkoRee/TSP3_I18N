@@ -4,6 +4,7 @@ using HarmonyLib;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Json;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -167,6 +168,50 @@ namespace TheStanleyParableUltraDeluxe_Chinese
             }
             else if (__instance.font == TMPTranslateFont)
             {
+                System.Collections.Generic.Dictionary<string, ReverseText> ReverseTexts = new System.Collections.Generic.Dictionary<string, ReverseText>();
+                foreach (Match match in Regex.Matches(__instance.text, "<(prefix|postfix) name=(.+?)>(.+?)</\\1>", RegexOptions.IgnoreCase))
+                {
+                    string position = match.Groups[1].Value;
+                    string name = match.Groups[2].Value;
+                    string value = match.Groups[3].Value;
+                    if (!ReverseTexts.ContainsKey(name))
+                    {
+                        ReverseTexts.Add(name, new ReverseText());
+                    }
+
+                    if (position == "prefix") // 前缀
+                    {
+                        ReverseTexts[name].Prefix = value;
+                    }
+                    else if (position == "postfix") // 后缀
+                    {
+                        ReverseTexts[name].Postfix = value;
+                    }
+                    else
+                    {
+                        Debug.LogError($"未知的倒置文本定义: {position} 出现在: {__instance.text}");
+                    }
+                }
+                foreach(System.Collections.Generic.KeyValuePair<string, ReverseText> kv in ReverseTexts)
+                {
+                    if (kv.Value.Prefix == null && kv.Value.Postfix != null)
+                    {
+                        // 只单独显示了后缀，直接去掉包装
+                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "postfix", kv.Key, kv.Value.Postfix), kv.Value.Postfix);
+                    }
+                    else if (kv.Value.Prefix != null && kv.Value.Postfix == null)
+                    {
+                        // 只单独显示了前缀，直接去掉包装
+                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "prefix", kv.Key, kv.Value.Prefix), kv.Value.Prefix);
+                    }
+                    else
+                    {
+                        // 将前缀替换为后缀
+                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "prefix", kv.Key, kv.Value.Prefix), kv.Value.Postfix);
+                        // 将后缀替换为前缀
+                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "postfix", kv.Key, kv.Value.Postfix), kv.Value.Prefix);
+                    }
+                }
                 if (__instance.overflowMode != TextOverflowModes.Overflow)
                 {
                     if (__instance.preferredWidth > 1 && __instance.bounds.extents == Vector3.zero)
