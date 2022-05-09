@@ -7,8 +7,8 @@
     <ProjectGuid>{908CA800-1E6C-4956-A429-5ABED633F5F1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TheStanleyParableUltraDeluxe_Chinese</RootNamespace>
-    <AssemblyName>TheStanleyParableUltraDeluxe_Chinese</AssemblyName>
+    <RootNamespace>TSP3_I18N</RootNamespace>
+    <AssemblyName>TSP3_I18N</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -81,9 +81,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ReverseText.cs" />
-    <Compile Include="Dict.cs" />
-    <Compile Include="TheStanleyParableUltraDeluxe_Chinese.cs" />
+    <Compile Include="Patch\Game.cs" />
+    <Compile Include="Patch\Util.cs" />
+    <Compile Include="Data\ReverseText.cs" />
+    <Compile Include="Data\Dict.cs" />
+    <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

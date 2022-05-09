@@ -1,15 +1,14 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("TheStanleyParableUltraDeluxe_Chinese")]
-[assembly: AssemblyDescription("汉化《史丹利的寓言：终极豪华版》所使用的字库插件，基于 BepInEx 和 I18NFont4UnityGame")]
+[assembly: AssemblyTitle("《史丹利的寓言：终极豪华版》翻译插件")]
+[assembly: AssemblyDescription("用于翻译《史丹利的寓言：终极豪华版》的插件，基于 BepInEx 和 I18NFont4UnityGame")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TheStanleyParableUltraDeluxe_Chinese")]
+[assembly: AssemblyCompany("Wankko Ree")]
+[assembly: AssemblyProduct("TSP3_I18N")]
 [assembly: AssemblyCopyright("Copyright © by Wankko Ree")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +31,5 @@ using System.Runtime.InteropServices;
 //可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值
 //通过使用 "*"，如下所示:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0")]
+[assembly: AssemblyFileVersion("1.0")]

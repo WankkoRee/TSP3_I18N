@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace TheStanleyParableUltraDeluxe_Chinese
+namespace TSP3_I18N.Data
 {
     [DataContract]
     public class Dict
