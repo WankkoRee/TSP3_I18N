@@ -24,6 +24,7 @@ namespace TSP3_I18N
         public static ConfigEntry<string> DictsName;
         public static string newlanguageName = "Chinese";
         public static string newlanguageCode = "zh";
+        public static string newlanguageLocalName = "简体中文";
 
         public static Font TranslateFont;
         public static TMPro.TMP_FontAsset TMPTranslateFont;

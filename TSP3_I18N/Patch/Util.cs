@@ -68,7 +68,7 @@ namespace TSP3_I18N.Patch
         [HarmonyPatch(new Type[] { typeof(byte[]), typeof(uint) })]
         static void AssetBundle_LoadFromMemory_Internal_Patch(byte[] binary, uint crc, AssetBundle __instance)
         {
-            Plugin.Log.LogDebug($"AssetBundle.LoadFromMemory_Internal( {binary}, {crc} )");
+            Plugin.Log.LogDebug($"AssetBundle.LoadFromMemory_Internal( {binary}.Length={binary.Length}, {crc} )");
         }
 
         [HarmonyPrefix]
@@ -77,7 +77,7 @@ namespace TSP3_I18N.Patch
         [HarmonyPatch(new Type[] { typeof(byte[]), typeof(uint) })]
         static void AssetBundle_LoadFromMemoryAsync_Internal_Patch(byte[] binary, uint crc, AssetBundle __instance)
         {
-            Plugin.Log.LogDebug($"AssetBundle.LoadFromMemoryAsync_Internal( {binary}, {crc} )");
+            Plugin.Log.LogDebug($"AssetBundle.LoadFromMemoryAsync_Internal( {binary}.Length={binary.Length}, {crc} )");
         }
     }
 }

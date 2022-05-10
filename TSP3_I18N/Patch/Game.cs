@@ -58,6 +58,23 @@ namespace TSP3_I18N.Patch
         [HarmonyPatch("InternalUpdate")]
         public static void TMPFontPatch(TMPro.TextMeshProUGUI __instance)
         {
+            if (__instance.text == Plugin.newlanguageLocalName) // 语言选项为语言包内语言
+            {
+                if (__instance.font != Plugin.TMPTranslateFont)
+                {
+                    int key = __instance.GetHashCode();
+                    if (!originalTMPFont.ContainsKey(key))
+                    {
+                        originalTMPFont.Add(key, __instance.font);
+                    }
+                    __instance.font = Plugin.TMPTranslateFont;
+                }
+                return;
+            } else if (new List<string>(new string[] { "English", "Deutsch", "Italiano", "Français", "Español", "Русский" }).Contains(__instance.text)) // 语言选项为内置语言
+            {
+                return;
+            }
+
             if (__instance.font != Plugin.TMPTranslateFont && I2.Loc.LocalizationManager.CurrentLanguage == Plugin.newlanguageName.ToUpper())
             {
                 int key = __instance.GetHashCode();
@@ -251,6 +268,37 @@ namespace TSP3_I18N.Patch
             __instance.languageProfileData.profiles = newLanguages.ToArray();
 
             Plugin.Log.LogInfo($"已添加语言: {Plugin.newlanguageName} 到 GameMaster.languageProfileData");
+        }
+
+        /// <summary>
+        /// 在资源包加载完毕时，对一些资源进行增改
+        /// 使首次进入游戏的语言选择界面可以显示语言包
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(AssetBundle))]
+        [HarmonyPatch("LoadAsset_Internal")]
+        [HarmonyPatch(new Type[] { typeof(string), typeof(Type) })]
+        static void LoadAssetPatch(string name, Type type, AssetBundle __instance)
+        {
+            if (name == "assetbundlemanifest")
+            {
+                GameObject SubtitleSelectionGroup = GameObject.Find("Subtitle_Selection_Group");
+                if (SubtitleSelectionGroup != null)
+                {
+                    GameObject lastLanguageButton = SubtitleSelectionGroup.transform.GetChild(SubtitleSelectionGroup.transform.childCount - 1).gameObject;
+                    GameObject newLanguageButton = UnityEngine.Object.Instantiate(lastLanguageButton, SubtitleSelectionGroup.transform, false);
+                    newLanguageButton.name = $"Settings_Character_Button (Mod_{newLanguageButton})";
+                    newLanguageButton.transform.Find("Default").Find("Text").GetComponent<TMPro.TextMeshProUGUI>().text = Plugin.newlanguageLocalName;
+                    UnityEngine.UI.Toggle.ToggleEvent newLanguageButtonEvent = newLanguageButton.GetComponent<UnityEngine.UI.Toggle>().onValueChanged;
+                    var lastLanguageCode = Traverse.Create(newLanguageButtonEvent)
+                        .Field("m_PersistentCalls")
+                        .Field("m_Calls")
+                        .Property("Item", new object[]{0} )
+                        .Field("m_Arguments")
+                        .Field("m_IntArgument");
+                    lastLanguageCode.SetValue(lastLanguageCode.GetValue<int>()+1);
+                }
+            }
         }
     }
 }
