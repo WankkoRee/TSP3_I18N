@@ -23,11 +23,11 @@ namespace TSP3_I18N.Patch
         {
             if (__instance.font == null)
             {
-                Plugin.Log.LogDebug("字体为 null");
+                //Plugin.Log.LogDebug("字体为 null");
                 return;
             }
             string FontName = __instance.font.name;
-            if (Plugin.fontsPool.Contains(FontName))
+            if (Plugin.fontsPatcherPool.Contains(FontName) || Plugin.fontsNoPatcherPool.Contains(FontName))
             {
                 return;
             }
@@ -38,6 +38,7 @@ namespace TSP3_I18N.Patch
             else
             {
                 Plugin.Log.LogWarning($"字体: {FontName} 没有映射");
+                Plugin.fontsNoPatcherPool.Add(FontName);
             }
         }
 
@@ -52,11 +53,11 @@ namespace TSP3_I18N.Patch
         {
             if (__instance.font == null)
             {
-                Plugin.Log.LogDebug("null font found!");
+                //Plugin.Log.LogDebug("null font found!");
                 return;
             }
             string FontName = __instance.font.name;
-            if (Plugin.fontsPool.Contains(FontName))
+            if (Plugin.fontsPatcherPool.Contains(FontName) || Plugin.fontsNoPatcherPool.Contains(FontName))
             {
                 return;
             }
@@ -67,6 +68,7 @@ namespace TSP3_I18N.Patch
             else
             {
                 Plugin.Log.LogWarning($"字体: {FontName} 没有映射");
+                Plugin.fontsNoPatcherPool.Add(FontName);
             }
 
             Dictionary<string, ReverseText> ReverseTexts = new Dictionary<string, ReverseText>();

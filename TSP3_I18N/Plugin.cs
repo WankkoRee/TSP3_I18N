@@ -28,7 +28,8 @@ namespace TSP3_I18N
 
         public static Dictionary<string, Dict> dicts = new Dictionary<string, Dict>();
         public static Dictionary<string, FontMap> fonts = new Dictionary<string, FontMap>();
-        public static HashSet<string> fontsPool = new HashSet<string>();
+        public static HashSet<string> fontsPatcherPool = new HashSet<string>();
+        public static HashSet<string> fontsNoPatcherPool = new HashSet<string>();
 
         private void Awake()
         {
@@ -102,16 +103,16 @@ namespace TSP3_I18N
                         if (!fonts.ContainsKey(fontMap.OriginFont))
                         {
                             LoadFont(fontMap);
-                            fontsPool.Add(fontMap.StaticFont.name);
-                            fontsPool.Add(fontMap.DynamicFont.name);
+                            fontsPatcherPool.Add(fontMap.StaticFont.name);
+                            fontsPatcherPool.Add(fontMap.DynamicFont.name);
                             fonts.Add(fontMap.OriginFont, fontMap);
                         }
                         else
                         {
                             Log.LogWarning($"字体包中存在重复的原始字体: {fontMap.OriginFont}");
                             LoadFont(fontMap);
-                            fontsPool.Add(fontMap.StaticFont.name);
-                            fontsPool.Add(fontMap.DynamicFont.name);
+                            fontsPatcherPool.Add(fontMap.StaticFont.name);
+                            fontsPatcherPool.Add(fontMap.DynamicFont.name);
                             fonts[fontMap.OriginFont] = fontMap;
                         }
                     }
