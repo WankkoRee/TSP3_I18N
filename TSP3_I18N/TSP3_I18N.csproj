@@ -81,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\FontMap.cs" />
     <Compile Include="Patch\Game.cs" />
     <Compile Include="Patch\Util.cs" />
     <Compile Include="Data\ReverseText.cs" />

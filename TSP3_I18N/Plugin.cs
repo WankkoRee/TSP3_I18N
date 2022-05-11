@@ -20,16 +20,15 @@ namespace TSP3_I18N
     {
         internal static ManualLogSource Log;
 
-        public static ConfigEntry<string> FontName;
+        public static ConfigEntry<string> FontsName;
         public static ConfigEntry<string> DictsName;
         public static string newlanguageName = "Chinese";
         public static string newlanguageCode = "zh";
         public static string newlanguageLocalName = "简体中文";
 
-        public static Font TranslateFont;
-        public static TMPro.TMP_FontAsset TMPTranslateFont;
-
         public static Dictionary<string, Dict> dicts = new Dictionary<string, Dict>();
+        public static Dictionary<string, FontMap> fonts = new Dictionary<string, FontMap>();
+        public static HashSet<string> fontsPool = new HashSet<string>();
 
         private void Awake()
         {
@@ -37,50 +36,97 @@ namespace TSP3_I18N
         }
         private void Start()
         {
-            FontName = Config.Bind<string>("config", "FontName", "geetype_meiheigb_flash", "put font package to <GameName>/BepInEx/plugins/TSP3_I18N");
-            DictsName = Config.Bind<string>("config", "DictsName", "dicts.json", "put dicts package to <GameName>/BepInEx/plugins/TSP3_I18N");
-            LoadFont(FontName.Value);
+            FontsName = Config.Bind<string>("config", "FontsName", "fonts.json", "put fonts and their index json package to <GameName>/BepInEx/plugins/TSP3_I18N");
+            DictsName = Config.Bind<string>("config", "DictsName", "dicts.json", "put dicts index json package to <GameName>/BepInEx/plugins/TSP3_I18N");
+            LoadFonts(FontsName.Value);
             LoadDicts(DictsName.Value);
             Harmony.CreateAndPatchAll(typeof(Patch.Util));
             Harmony.CreateAndPatchAll(typeof(Patch.Game));
             Log.LogMessage("《史丹利的寓言：终极豪华版》翻译插件 已加载");
-
         }
 
         /// <summary>
         /// 加载字体
         /// </summary>
-        public void LoadFont(string fontName)
+        public void LoadFont(FontMap fontMap)
         {
+            string fontName = fontMap.CustomFont;
             try
             {
                 string path = $"{Paths.PluginPath}/TSP3_I18N/{fontName}";
                 if (File.Exists(path))
                 {
                     var ab = AssetBundle.LoadFromFile(path);
-                    TranslateFont = ab.LoadAsset<Font>(fontName);
-                    TMPTranslateFont = ab.LoadAsset<TMPro.TMP_FontAsset>($"{fontName} SDF");
-                    if (TranslateFont != null && TMPTranslateFont != null)
+                    fontMap.StaticFont = ab.LoadAsset<Font>(fontName);
+                    fontMap.DynamicFont = ab.LoadAsset<TMPro.TMP_FontAsset>($"{fontName} SDF");
+                    if (fontMap.StaticFont != null && fontMap.DynamicFont != null)
                     {
-                        Log.LogMessage($"已加载字体包: {fontName}");
+                        Log.LogMessage($"已加载字体: {fontName}");
                     }
                     else
                     {
-                        Log.LogError($"字体包: {fontName} 已损坏, 请检查文件");
+                        Log.LogError($"字体: {fontName} 已损坏, 请检查文件");
                     }
                     ab.Unload(false);
                 }
                 else
                 {
-                    Log.LogError($"字体包: {fontName} 未找到, 请检查路径: {path} 是否正确");
+                    Log.LogError($"字体: {fontName} 未找到, 请检查路径: {path} 是否正确");
                 }
             }
             catch (Exception e)
             {
-                Log.LogError($"加载字体包失败: {e.Message}\n{e.StackTrace}");
+                Log.LogError($"加载字体: {fontName} 失败: {e.Message}\n{e.StackTrace}");
             }
         }
 
+        /// <summary>
+        /// 加载字体包
+        /// </summary>
+        public void LoadFonts(string fontsName)
+        {
+            try
+            {
+                string path = $"{Paths.PluginPath}/TSP3_I18N/{fontsName}";
+                if (File.Exists(path))
+                {
+                    FontMap[] fontsJson;
+                    DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(typeof(FontMap[]));
+                    using (FileStream fs = File.Open(path, FileMode.Open))
+                    {
+                        fs.Position = 0;
+                        fontsJson = (FontMap[])deseralizer.ReadObject(fs);
+                    }
+                    foreach (FontMap fontMap in fontsJson)
+                    {
+                        if (!fonts.ContainsKey(fontMap.OriginFont))
+                        {
+                            LoadFont(fontMap);
+                            fontsPool.Add(fontMap.StaticFont.name);
+                            fontsPool.Add(fontMap.DynamicFont.name);
+                            fonts.Add(fontMap.OriginFont, fontMap);
+                        }
+                        else
+                        {
+                            Log.LogWarning($"字体包中存在重复的原始字体: {fontMap.OriginFont}");
+                            LoadFont(fontMap);
+                            fontsPool.Add(fontMap.StaticFont.name);
+                            fontsPool.Add(fontMap.DynamicFont.name);
+                            fonts[fontMap.OriginFont] = fontMap;
+                        }
+                    }
+                    Log.LogMessage($"已加载字体包: {fontsName}");
+                }
+                else
+                {
+                    Log.LogError($"字体包: {fontsName} 未找到, 请检查路径: {path} 是否正确");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.LogError($"加载字体包: {fontsName} 失败: {e.Message}\n{e.StackTrace}");
+            }
+        }
         /// <summary>
         /// 加载语言包
         /// </summary>
@@ -117,7 +163,7 @@ namespace TSP3_I18N
             }
             catch (Exception e)
             {
-                Log.LogError($"加载语言包失败: {e.Message}\n{e.StackTrace}");
+                Log.LogError($"加载语言包: {dictsName} 失败: {e.Message}\n{e.StackTrace}");
             }
         }
     }

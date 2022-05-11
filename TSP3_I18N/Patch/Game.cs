@@ -13,142 +13,104 @@ namespace TSP3_I18N.Patch
 {
     class Game
     {
-        public static Dictionary<int, Font> originalFont = new Dictionary<int, Font>();
-        public static Dictionary<int, TMPro.TMP_FontAsset> originalTMPFont = new Dictionary<int, TMPro.TMP_FontAsset>();
-
         /// <summary>
-        /// 只在显示语言包内语言时，修改字体，针对静态字体
+        /// 修改字体，针对静态字体
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Text))]
         [HarmonyPatch("OnEnable")]
         public static void FontPatch(Text __instance)
         {
-            if (__instance.font != Plugin.TranslateFont && I2.Loc.LocalizationManager.CurrentLanguage == Plugin.newlanguageName.ToUpper())
+            if (__instance.font == null)
             {
-                int key = __instance.GetHashCode();
-                if (!originalFont.ContainsKey(key))
-                {
-                    originalFont.Add(key, __instance.font);
-                }
-                __instance.font = Plugin.TranslateFont;
+                Plugin.Log.LogDebug("字体为 null");
+                return;
             }
-            else if (__instance.font == Plugin.TranslateFont && I2.Loc.LocalizationManager.CurrentLanguage != Plugin.newlanguageName.ToUpper())
+            string FontName = __instance.font.name;
+            if (Plugin.fontsPool.Contains(FontName))
             {
-                int key = __instance.GetHashCode();
-                if (originalFont.ContainsKey(key))
-                {
-                    __instance.font = originalFont[key];
-                    originalFont.Remove(key);
-                }
-                else
-                {
-                    Plugin.Log.LogError("一个 Text 对象可能被修改过字体，但原字体未被记录");
-                }
+                return;
+            }
+            else if (Plugin.fonts.ContainsKey(FontName))
+            {
+                __instance.font = Plugin.fonts[FontName].StaticFont;
+            }
+            else
+            {
+                Plugin.Log.LogWarning($"字体: {FontName} 没有映射");
             }
         }
 
         /// <summary>
         /// 只在显示语言包内语言时，修改字体，针对动态字体
         /// 并对需要倒置的文本进行倒序处理
-        /// 如果有不显示的文本，则设置显示方式为溢出
         /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(TMPro.TextMeshProUGUI))]
         [HarmonyPatch("InternalUpdate")]
         public static void TMPFontPatch(TMPro.TextMeshProUGUI __instance)
         {
-            if (__instance.text == Plugin.newlanguageLocalName) // 语言选项为语言包内语言
+            if (__instance.font == null)
             {
-                if (__instance.font != Plugin.TMPTranslateFont)
-                {
-                    int key = __instance.GetHashCode();
-                    if (!originalTMPFont.ContainsKey(key))
-                    {
-                        originalTMPFont.Add(key, __instance.font);
-                    }
-                    __instance.font = Plugin.TMPTranslateFont;
-                }
+                Plugin.Log.LogDebug("null font found!");
                 return;
-            } else if (new List<string>(new string[] { "English", "Deutsch", "Italiano", "Français", "Español", "Русский" }).Contains(__instance.text)) // 语言选项为内置语言
+            }
+            string FontName = __instance.font.name;
+            if (Plugin.fontsPool.Contains(FontName))
             {
                 return;
+            }
+            else if (Plugin.fonts.ContainsKey(FontName))
+            {
+                __instance.font = Plugin.fonts[FontName].DynamicFont;
+            }
+            else
+            {
+                Plugin.Log.LogWarning($"字体: {FontName} 没有映射");
             }
 
-            if (__instance.font != Plugin.TMPTranslateFont && I2.Loc.LocalizationManager.CurrentLanguage == Plugin.newlanguageName.ToUpper())
+            Dictionary<string, ReverseText> ReverseTexts = new Dictionary<string, ReverseText>();
+            foreach (Match match in Regex.Matches(__instance.text, "<(prefix|postfix) name=(.+?)>(.+?)</\\1>", RegexOptions.IgnoreCase))
             {
-                int key = __instance.GetHashCode();
-                if (!originalTMPFont.ContainsKey(key))
+                string position = match.Groups[1].Value;
+                string name = match.Groups[2].Value;
+                string value = match.Groups[3].Value;
+                if (!ReverseTexts.ContainsKey(name))
                 {
-                    originalTMPFont.Add(key, __instance.font);
+                    ReverseTexts.Add(name, new ReverseText());
                 }
-                __instance.font = Plugin.TMPTranslateFont;
-            }
-            else if (__instance.font == Plugin.TMPTranslateFont && I2.Loc.LocalizationManager.CurrentLanguage != Plugin.newlanguageName.ToUpper())
-            {
-                int key = __instance.GetHashCode();
-                if (originalTMPFont.ContainsKey(key))
+
+                if (position == "prefix") // 前缀
                 {
-                    __instance.font = originalTMPFont[key];
-                    originalTMPFont.Remove(key);
+                    ReverseTexts[name].Prefix = value;
+                }
+                else if (position == "postfix") // 后缀
+                {
+                    ReverseTexts[name].Postfix = value;
                 }
                 else
                 {
-                    Debug.LogError("一个 Text 对象可能被修改过字体，但原字体未被记录");
+                    Debug.LogError($"未知的倒置文本定义: {position} 出现在: {__instance.text}");
                 }
             }
-            else if (__instance.font == Plugin.TMPTranslateFont)
+            foreach (System.Collections.Generic.KeyValuePair<string, ReverseText> kv in ReverseTexts)
             {
-                Dictionary<string, ReverseText> ReverseTexts = new Dictionary<string, ReverseText>();
-                foreach (Match match in Regex.Matches(__instance.text, "<(prefix|postfix) name=(.+?)>(.+?)</\\1>", RegexOptions.IgnoreCase))
+                if (kv.Value.Prefix == null && kv.Value.Postfix != null)
                 {
-                    string position = match.Groups[1].Value;
-                    string name = match.Groups[2].Value;
-                    string value = match.Groups[3].Value;
-                    if (!ReverseTexts.ContainsKey(name))
-                    {
-                        ReverseTexts.Add(name, new ReverseText());
-                    }
-
-                    if (position == "prefix") // 前缀
-                    {
-                        ReverseTexts[name].Prefix = value;
-                    }
-                    else if (position == "postfix") // 后缀
-                    {
-                        ReverseTexts[name].Postfix = value;
-                    }
-                    else
-                    {
-                        Debug.LogError($"未知的倒置文本定义: {position} 出现在: {__instance.text}");
-                    }
+                    // 只单独显示了后缀，直接去掉包装
+                    __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "postfix", kv.Key, kv.Value.Postfix), kv.Value.Postfix);
                 }
-                foreach (System.Collections.Generic.KeyValuePair<string, ReverseText> kv in ReverseTexts)
+                else if (kv.Value.Prefix != null && kv.Value.Postfix == null)
                 {
-                    if (kv.Value.Prefix == null && kv.Value.Postfix != null)
-                    {
-                        // 只单独显示了后缀，直接去掉包装
-                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "postfix", kv.Key, kv.Value.Postfix), kv.Value.Postfix);
-                    }
-                    else if (kv.Value.Prefix != null && kv.Value.Postfix == null)
-                    {
-                        // 只单独显示了前缀，直接去掉包装
-                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "prefix", kv.Key, kv.Value.Prefix), kv.Value.Prefix);
-                    }
-                    else
-                    {
-                        // 将前缀替换为后缀
-                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "prefix", kv.Key, kv.Value.Prefix), kv.Value.Postfix);
-                        // 将后缀替换为前缀
-                        __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "postfix", kv.Key, kv.Value.Postfix), kv.Value.Prefix);
-                    }
+                    // 只单独显示了前缀，直接去掉包装
+                    __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "prefix", kv.Key, kv.Value.Prefix), kv.Value.Prefix);
                 }
-                if (__instance.overflowMode != TMPro.TextOverflowModes.Overflow)
+                else
                 {
-                    if (__instance.preferredWidth > 1 && __instance.bounds.extents == Vector3.zero)
-                    {
-                        __instance.overflowMode = TMPro.TextOverflowModes.Overflow;
-                    }
+                    // 将前缀替换为后缀
+                    __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "prefix", kv.Key, kv.Value.Prefix), kv.Value.Postfix);
+                    // 将后缀替换为前缀
+                    __instance.text = __instance.text.Replace(String.Format("<{0} name={1}>{2}</{0}>", "postfix", kv.Key, kv.Value.Postfix), kv.Value.Prefix);
                 }
             }
         }
