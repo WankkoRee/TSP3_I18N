@@ -27,15 +27,15 @@ namespace TSP3_I18N.Patch
                 return;
             }
             string FontName = __instance.font.name;
-            if (Plugin.fontsPatcherPool.Contains(FontName) || Plugin.fontsNoPatcherPool.Contains(FontName))
+            if (Plugin.fontsPatcherPool.Contains(FontName) || Plugin.fontsNoPatcherPool.Contains(FontName)) // 是字体包内字体（已更改）或是未映射字体（无法更改），直接返回
             {
                 return;
             }
-            else if (Plugin.fonts.ContainsKey(FontName))
+            else if (Plugin.fonts.ContainsKey(FontName)) // 是有映射字体（可以更改），进行更改
             {
                 __instance.font = Plugin.fonts[FontName].StaticFont;
             }
-            else
+            else // 是未映射字体（无法更改），记录未映射情况
             {
                 Plugin.Log.LogWarning($"字体: {FontName} 没有映射");
                 Plugin.fontsNoPatcherPool.Add(FontName);
@@ -43,7 +43,7 @@ namespace TSP3_I18N.Patch
         }
 
         /// <summary>
-        /// 只在显示语言包内语言时，修改字体，针对动态字体
+        /// 修改字体，针对动态字体
         /// 并对需要倒置的文本进行倒序处理
         /// </summary>
         [HarmonyPostfix]
@@ -53,19 +53,19 @@ namespace TSP3_I18N.Patch
         {
             if (__instance.font == null)
             {
-                //Plugin.Log.LogDebug("null font found!");
+                //Plugin.Log.LogDebug("字体为 null");
                 return;
             }
             string FontName = __instance.font.name;
-            if (Plugin.fontsPatcherPool.Contains(FontName) || Plugin.fontsNoPatcherPool.Contains(FontName))
+            if (Plugin.fontsPatcherPool.Contains(FontName) || Plugin.fontsNoPatcherPool.Contains(FontName)) // 是字体包内字体（已更改）或是未映射字体（无法更改），直接返回
             {
                 return;
             }
-            else if (Plugin.fonts.ContainsKey(FontName))
+            else if (Plugin.fonts.ContainsKey(FontName)) // 是有映射字体（可以更改），进行更改
             {
                 __instance.font = Plugin.fonts[FontName].DynamicFont;
             }
-            else
+            else // 是未映射字体（无法更改），记录未映射情况
             {
                 Plugin.Log.LogWarning($"字体: {FontName} 没有映射");
                 Plugin.fontsNoPatcherPool.Add(FontName);

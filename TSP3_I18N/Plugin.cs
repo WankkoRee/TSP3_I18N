@@ -49,8 +49,9 @@ namespace TSP3_I18N
         /// <summary>
         /// 加载字体
         /// </summary>
-        public void LoadFont(FontMap fontMap)
+        public bool LoadFont(FontMap fontMap)
         {
+            bool flag = false;
             string fontName = fontMap.CustomFont;
             try
             {
@@ -63,6 +64,7 @@ namespace TSP3_I18N
                     if (fontMap.StaticFont != null && fontMap.DynamicFont != null)
                     {
                         Log.LogMessage($"已加载字体: {fontName}");
+                        flag = true;
                     }
                     else
                     {
@@ -79,6 +81,7 @@ namespace TSP3_I18N
             {
                 Log.LogError($"加载字体: {fontName} 失败: {e.Message}\n{e.StackTrace}");
             }
+            return flag;
         }
 
         /// <summary>
@@ -102,18 +105,22 @@ namespace TSP3_I18N
                     {
                         if (!fonts.ContainsKey(fontMap.OriginFont))
                         {
-                            LoadFont(fontMap);
-                            fontsPatcherPool.Add(fontMap.StaticFont.name);
-                            fontsPatcherPool.Add(fontMap.DynamicFont.name);
-                            fonts.Add(fontMap.OriginFont, fontMap);
+                            if (LoadFont(fontMap))
+                            {
+                                fontsPatcherPool.Add(fontMap.StaticFont.name);
+                                fontsPatcherPool.Add(fontMap.DynamicFont.name);
+                                fonts.Add(fontMap.OriginFont, fontMap);
+                            }
                         }
                         else
                         {
                             Log.LogWarning($"字体包中存在重复的原始字体: {fontMap.OriginFont}");
-                            LoadFont(fontMap);
-                            fontsPatcherPool.Add(fontMap.StaticFont.name);
-                            fontsPatcherPool.Add(fontMap.DynamicFont.name);
-                            fonts[fontMap.OriginFont] = fontMap;
+                            if (LoadFont(fontMap))
+                            {
+                                fontsPatcherPool.Add(fontMap.StaticFont.name);
+                                fontsPatcherPool.Add(fontMap.DynamicFont.name);
+                                fonts[fontMap.OriginFont] = fontMap;
+                            }
                         }
                     }
                     Log.LogMessage($"已加载字体包: {fontsName}");
